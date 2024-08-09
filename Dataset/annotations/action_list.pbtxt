@@ -1,0 +1,24 @@
+item {
+  name: "指指点点"
+  id: 1
+}
+item {
+  name: "攻击"
+  id: 2
+}
+item {
+  name: "操作他人设备"
+  id: 3
+}
+item {
+  name: "不文明坐姿"
+  id: 4
+}
+item {
+  name: "破坏电脑"
+  id: 5
+}
+item {
+  name: "砸鼠标键盘"
+  id: 6
+}

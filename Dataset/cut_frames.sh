@@ -1,25 +1,17 @@
-IN_DATA_DIR="./video_crop"
-OUT_DATA_DIR="./frames"
+IN_DATA_DIR="./Dataset/videos"
+OUT_DATA_DIR="./Dataset/frames"
+DATA_DIR="./Dataset/rawframes"
 
-if [[ ! -d "${OUT_DATA_DIR}" ]]; then
-  echo "${OUT_DATA_DIR} doesn't exist. Creating it.";
-  mkdir -p ${OUT_DATA_DIR}
-fi
-
-for video in $(ls -A1 -U ${IN_DATA_DIR}/*)
-do
-  video_name=${video##*/}
-
-  echo $video_name
-  array=(${video_name//./ })
-  video_name=${array[0]}
-  echo $video_name
+videos=$(ls $IN_DATA_DIR)
+for video in $videos; do
+    video_name=$(echo $video | cut -d. -f1).$(echo $video | cut -d. -f2)
+    video_path=$IN_DATA_DIR/$video
+    frames_dir=${OUT_DATA_DIR}/$video_name
+    rawframes_dir=${DATA_DIR}/$video_name
     
-
-  out_video_dir=${OUT_DATA_DIR}/${video_name}/
-  mkdir -p "${out_video_dir}"
-
-  out_name="${out_video_dir}/${video_name}_%06d.jpg"
-
-  ffmpeg -i "${video}" -r 30 -q:v 1 "${out_name}"
+    if [ ! -d $rawframes_dir ] && [ ! -d $frames_dir ]; then
+        mkdir -p "${frames_dir}"
+        out_name="${frames_dir}/${video_name}_%06d.jpg"
+        ffmpeg -i "${video_path}" -r 30 -q:v 1 "${out_name}"
+    fi
 done
