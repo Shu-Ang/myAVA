@@ -19,5 +19,5 @@ python ./Dataset/process_train_temp.py
 
 mv ./Dataset/frames/* ./Dataset/rawframes/
 
-
+python ./yolovDeepsort/mywork/change_dense_proposals_train_val.py
 
