@@ -293,23 +293,3 @@ cd /xxx/mmaction2_YF
 python tools/train.py configs/detection/ava/my_slowfast_kinetics_pretrained_r50_4x16x1_20e_ava_rgb.py --validate
 ```
 # 9 一些error
- #### 9.1 **AttributeError: partially initialized module 'cv2' has no attribute '_registerMatType' (most likely due to a circular import)**
- >opencv引入冲突问题，我们这里安装了opencv-python-headless==4.1.2.30，需要把之前的opencv-python卸载
- ```
- pip uninstall opencv-python
- ```
-
-#### 9.2 **AttributeError: module 'cv2' has no attribute 'COLOR_BGR2RGB**
-> opencv-python-headless与opencv-contrib-python版本不一致
-```
-pip uninstalled opencv-contrib-python
-pip install opencv-contrib-python==4.1.2.30
-```
-
-#### 9.3 **TypeError: FormatCode() got an unexpected keyword argument 'verify'**
->yapf与mmcv版本不兼容，降低yapf版本即可
-```
-pip uninstall yapf
-pip install yapf==0.30.0
-```
-pip3 install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu101/torch1.8.0/index.html
