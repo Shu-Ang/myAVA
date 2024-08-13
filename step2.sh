@@ -17,6 +17,8 @@ python ./Dataset/concat.py
 echo "adding data to train.csv......"
 python ./Dataset/process_train_temp.py
 
+mkdir ./Dataset/rawframes
+
 mv ./Dataset/frames/* ./Dataset/rawframes/
 
 python ./yolovDeepsort/mywork/change_dense_proposals_train_val.py

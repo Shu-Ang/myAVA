@@ -4,6 +4,10 @@ Dataset
     + train.csv
     +  val.csv
     + actionlist.pbtxt
+    + train_excluded_timestamps.csv
+    + val_excluded_timestamps.csv
+    + dense_proposals_train.pkl
+    + dense_proposals_val.pkl
 - rawframes
 # 2 环境准备
 ``` bash
@@ -58,3 +62,254 @@ bash step2.sh
 
 **注意，执行`clean1.sh`和`clean2.sh`可以将对应步骤的中间输出删除。开始标注之前务必执行这两个脚本以删除上次标注的中间输出。**
 
+# 7 mmaction2 install
+```
+cd /home
+
+git clone https://gitee.com/YFwinston/mmaction2_YF.git
+
+pip install mmcv-full==1.3.17 -f https://download.openmmlab.com/mmcv/dist/cu111/torch1.8.0/index.html
+
+pip install opencv-python-headless==4.1.2.30
+
+pip install moviepy
+
+cd mmaction2_YF
+pip install -r requirements/build.txt
+pip install -v -e .
+mkdir -p ./data/ava
+
+cd ..
+git clone https://gitee.com/YFwinston/mmdetection.git
+cd mmdetection
+pip install -r requirements/build.txt
+pip install -v -e .
+
+cd ../mmaction2_YF
+
+wget https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_2x_coco/faster_rcnn_r50_fpn_2x_coco_bbox_mAP-0.384_20200504_210434-a5d8aa15.pth -P ./Checkpionts/mmdetection/
+
+wget https://download.openmmlab.com/mmaction/recognition/slowfast/slowfast_r50_8x8x1_256e_kinetics400_rgb/slowfast_r50_8x8x1_256e_kinetics400_rgb_20200716-73547d2b.pth -P ./Checkpionts/mmaction/
+```
+
+# 8 训练与测试
+## 8.1 配置文件
+```
+cd /xxx/mmaction2_YF/configs/detection/ava/
+touch my_slowfast_kinetics_pretrained_r50_4x16x1_20e_ava_rgb.py
+```
+内容如下：
+```
+# model setting
+model = dict(
+    type='FastRCNN',
+    backbone=dict(
+        type='ResNet3dSlowFast',
+        pretrained=None,
+        resample_rate=8,
+        speed_ratio=8,
+        channel_ratio=8,
+        slow_pathway=dict(
+            type='resnet3d',
+            depth=50,
+            pretrained=None,
+            lateral=True,
+            conv1_kernel=(1, 7, 7),
+            dilations=(1, 1, 1, 1),
+            conv1_stride_t=1,
+            pool1_stride_t=1,
+            inflate=(0, 0, 1, 1),
+            spatial_strides=(1, 2, 2, 1)),
+        fast_pathway=dict(
+            type='resnet3d',
+            depth=50,
+            pretrained=None,
+            lateral=False,
+            base_channels=8,
+            conv1_kernel=(5, 7, 7),
+            conv1_stride_t=1,
+            pool1_stride_t=1,
+            spatial_strides=(1, 2, 2, 1))),
+    roi_head=dict(
+        type='AVARoIHead',
+        bbox_roi_extractor=dict(
+            type='SingleRoIExtractor3D',
+            roi_layer_type='RoIAlign',
+            output_size=8,
+            with_temporal_pool=True),
+        bbox_head=dict(
+            type='BBoxHeadAVA',
+            in_channels=2304,
+            num_classes=81,
+            multilabel=True,
+            dropout_ratio=0.5)),
+    train_cfg=dict(
+        rcnn=dict(
+            assigner=dict(
+                type='MaxIoUAssignerAVA',
+                pos_iou_thr=0.9,
+                neg_iou_thr=0.9,
+                min_pos_iou=0.9),
+            sampler=dict(
+                type='RandomSampler',
+                num=32,
+                pos_fraction=1,
+                neg_pos_ub=-1,
+                add_gt_as_proposals=True),
+            pos_weight=1.0,
+            debug=False)),
+    test_cfg=dict(rcnn=dict(action_thr=0.002)))
+
+dataset_type = 'AVADataset'
+data_root = '/home/zhangshuang/myAVA/Dataset/rawframes'
+anno_root = '/home/zhangshuang/myAVA/Dataset/annotations'
+
+
+#ann_file_train = f'{anno_root}/ava_train_v2.1.csv'
+ann_file_train = f'{anno_root}/train.csv'
+#ann_file_val = f'{anno_root}/ava_val_v2.1.csv'
+ann_file_val = f'{anno_root}/val.csv'
+
+#exclude_file_train = f'{anno_root}/ava_train_excluded_timestamps_v2.1.csv'
+#exclude_file_val = f'{anno_root}/ava_val_excluded_timestamps_v2.1.csv'
+
+exclude_file_train = f'{anno_root}/train_excluded_timestamps.csv'
+exclude_file_val = f'{anno_root}/val_excluded_timestamps.csv'
+
+#label_file = f'{anno_root}/ava_action_list_v2.1_for_activitynet_2018.pbtxt'
+label_file = f'{anno_root}/action_list.pbtxt'
+
+proposal_file_train = (f'{anno_root}/dense_proposals_train.pkl')
+proposal_file_val = f'{anno_root}/dense_proposals_val.pkl'
+
+img_norm_cfg = dict(
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
+
+train_pipeline = [
+    dict(type='SampleAVAFrames', clip_len=32, frame_interval=2),
+    dict(type='RawFrameDecode'),
+    dict(type='RandomRescale', scale_range=(256, 320)),
+    dict(type='RandomCrop', size=256),
+    dict(type='Flip', flip_ratio=0.5),
+    dict(type='Normalize', **img_norm_cfg),
+    dict(type='FormatShape', input_format='NCTHW', collapse=True),
+    # Rename is needed to use mmdet detectors
+    dict(type='Rename', mapping=dict(imgs='img')),
+    dict(type='ToTensor', keys=['img', 'proposals', 'gt_bboxes', 'gt_labels']),
+    dict(
+        type='ToDataContainer',
+        fields=[
+            dict(key=['proposals', 'gt_bboxes', 'gt_labels'], stack=False)
+        ]),
+    dict(
+        type='Collect',
+        keys=['img', 'proposals', 'gt_bboxes', 'gt_labels'],
+        meta_keys=['scores', 'entity_ids'])
+]
+# The testing is w/o. any cropping / flipping
+val_pipeline = [
+    dict(type='SampleAVAFrames', clip_len=32, frame_interval=2),
+    dict(type='RawFrameDecode'),
+    dict(type='Resize', scale=(-1, 256)),
+    dict(type='Normalize', **img_norm_cfg),
+    dict(type='FormatShape', input_format='NCTHW', collapse=True),
+    # Rename is needed to use mmdet detectors
+    dict(type='Rename', mapping=dict(imgs='img')),
+    dict(type='ToTensor', keys=['img', 'proposals']),
+    dict(type='ToDataContainer', fields=[dict(key='proposals', stack=False)]),
+    dict(
+        type='Collect',
+        keys=['img', 'proposals'],
+        meta_keys=['scores', 'img_shape'],
+        nested=True)
+]
+
+data = dict(
+    #videos_per_gpu=9,
+    #workers_per_gpu=2,
+    videos_per_gpu=5,
+    workers_per_gpu=2,
+    val_dataloader=dict(videos_per_gpu=1),
+    test_dataloader=dict(videos_per_gpu=1),
+    train=dict(
+        type=dataset_type,
+        ann_file=ann_file_train,
+        exclude_file=exclude_file_train,
+        pipeline=train_pipeline,
+        label_file=label_file,
+        proposal_file=proposal_file_train,
+        person_det_score_thr=0.9,
+        data_prefix=data_root,
+        start_index=1,),
+    val=dict(
+        type=dataset_type,
+        ann_file=ann_file_val,
+        exclude_file=exclude_file_val,
+        pipeline=val_pipeline,
+        label_file=label_file,
+        proposal_file=proposal_file_val,
+        person_det_score_thr=0.9,
+        data_prefix=data_root,
+        start_index=1,))
+data['test'] = data['val']
+
+#optimizer = dict(type='SGD', lr=0.1125, momentum=0.9, weight_decay=0.00001)
+optimizer = dict(type='SGD', lr=0.0125, momentum=0.9, weight_decay=0.00001)
+# this lr is used for 8 gpus
+
+optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
+# learning policy
+
+lr_config = dict(
+    policy='step',
+    step=[10, 15],
+    warmup='linear',
+    warmup_by_epoch=True,
+    warmup_iters=5,
+    warmup_ratio=0.1)
+#total_epochs = 20
+total_epochs = 100
+checkpoint_config = dict(interval=1)
+workflow = [('train', 1)]
+evaluation = dict(interval=1, save_best='mAP@0.5IOU')
+log_config = dict(
+    interval=20, hooks=[
+        dict(type='TextLoggerHook'),
+    ])
+dist_params = dict(backend='nccl')
+log_level = 'INFO'
+work_dir = ('./work_dirs/ava/'
+            'slowfast_kinetics_pretrained_r50_4x16x1_20e_ava_rgb')
+load_from = ('https://download.openmmlab.com/mmaction/recognition/slowfast/'
+             'slowfast_r50_4x16x1_256e_kinetics400_rgb/'
+             'slowfast_r50_4x16x1_256e_kinetics400_rgb_20200704-bcde7ed7.pth')
+resume_from = None
+find_unused_parameters = False
+```
+
+## 8.2 开始训练
+```
+cd /xxx/mmaction2_YF
+python tools/train.py configs/detection/ava/my_slowfast_kinetics_pretrained_r50_4x16x1_20e_ava_rgb.py --validate
+```
+# 9 一些error
+ #### 9.1 **AttributeError: partially initialized module 'cv2' has no attribute '_registerMatType' (most likely due to a circular import)**
+ >opencv引入冲突问题，我们这里安装了opencv-python-headless==4.1.2.30，需要把之前的opencv-python卸载
+ ```
+ pip uninstall opencv-python
+ ```
+
+#### 9.2 **AttributeError: module 'cv2' has no attribute 'COLOR_BGR2RGB**
+> opencv-python-headless与opencv-contrib-python版本不一致
+```
+pip uninstalled opencv-contrib-python
+pip install opencv-contrib-python==4.1.2.30
+```
+
+#### 9.3 **TypeError: FormatCode() got an unexpected keyword argument 'verify'**
+>yapf与mmcv版本不兼容，降低yapf版本即可
+```
+pip uninstall yapf
+pip install yapf==0.30.0
+```
+pip3 install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu101/torch1.8.0/index.html

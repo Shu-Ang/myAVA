@@ -12,7 +12,7 @@ if [ -z "$(ls ./yolovDeepsort/yolov5/runs/detect)" ]; then
 fi
 
 if [ ! -f "./yolovDeepsort/mywork/dense_proposals_train.pkl" ]; then
-    echo "save detect results as ./yolovDeepsort/mywork/dense_proposals_train.py"
+    echo "save detect results as ./yolovDeepsort/mywork/dense_proposals_train.pkl"
     python ./yolovDeepsort/mywork/dense_proposals_train.py
 fi
 
