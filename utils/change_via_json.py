@@ -21,9 +21,9 @@ for root, dirs, files in os.walk("./Dataset/choose_frames", topdown=False):
                     # 这里的值应动态获取，时间关系，先固定成这样
                     viaJson['metadata'][metadata]["av"] = av
                 #修改后的文件名
-                newName = file.split(".")[0] + '.' + file.split(".")[1] + '_s'+'.json'
-                
-                with open(root+'/'+newName, 'w') as f2:
+                fileName , _ = os.path.splitext(file) 
+                newname = fileName + '_s'+'.json'
+                with open(root+'/'+newname, 'w') as f2:
                     f2.write(json.dumps(viaJson))
                     f2.close()
                 

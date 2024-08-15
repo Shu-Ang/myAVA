@@ -6,17 +6,16 @@ import pickle
 #传参 labelPath是yolov5检测结果的位置，需要获取0（0代表人）的四个坐标值，还需要检测概率
 # ../yolov5/runs/detect/exp/labels
 labelPath = "./yolovDeepsort/yolov5/runs/detect/exp/labels"
-
 #传参 保存为pkl的地址，这是像ava数据集对齐
 # ./avaMin_dense_proposals_train.pkl
-avaMin_dense_proposals_path = "./yolovDeepsort/mywork/dense_proposals_train.pkl"
+avaMin_dense_proposals_path = "./Dataset/dense_proposals_train.pkl"
 
 results_dict = {}
 for root, dirs, files in os.walk(labelPath):
     if root == labelPath:
         for file in files:    
             #读取yolov5中的信息
-            key = file.split('.')[0] + "." + file.split('.')[1]
+            key, _ = os.path.splitext(file)
             with open(os.path.join(root, file)) as temp_txt:
                 temp_data_txt = temp_txt.readlines() 
                 results = []

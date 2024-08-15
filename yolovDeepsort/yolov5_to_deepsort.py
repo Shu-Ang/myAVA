@@ -21,18 +21,16 @@ from PIL import Image
 #python yolov5_to_deepsort.py 
 
 # dict存放最后的json
-dicts = []
+datas = []
 def detect(opt):
     root_path = "./Dataset/choose_frames"
-    
     
     cfg = get_config()
     cfg.merge_from_file(opt.config_deepsort)
     
-    # 这里是avaMin_dense_proposals_train.pkl的路径，
-    # 但是之后要使用via标注之后的avaMin_train.csv，因为在微调之后，坐标数量与坐标位置会发生变化
-    f = open('./yolovDeepsort/mywork/dense_proposals_train_deepsort.pkl','rb')
-    info = pickle.load(f, encoding='iso-8859-1') 
+    # 这里是dense_proposals_train_deepsort.pkl的路径，
+    with open('./Dataset/dense_proposals_train_deepsort.pkl','rb') as f:
+        info = pickle.load(f, encoding='iso-8859-1') 
     
     videos = [entry for entry in os.listdir(root_path) if os.path.isdir(os.path.join(root_path, entry))]
     for video in videos:
@@ -43,6 +41,7 @@ def detect(opt):
                     max_iou_distance=cfg.DEEPSORT.MAX_IOU_DISTANCE,
                     max_age=cfg.DEEPSORT.MAX_AGE, n_init=cfg.DEEPSORT.N_INIT, nn_budget=cfg.DEEPSORT.NN_BUDGET,
                     use_cuda=True)
+        
         files = os.listdir(video_path)
         images = [entry for entry in files if entry.lower().endswith('.jpg')]
         sorted_images = sorted(images, key=lambda x: int(re.search(r'_(\d+).jpg$', x).group(1)))
@@ -50,7 +49,7 @@ def detect(opt):
         for image in sorted_images:    
             image_path = os.path.join(video_path, image)
             tempImg = cv2.imread(image_path)
-            imageId = image.split(".")[0] + "." + image.split(".")[1]
+            imageId , _ = os.path.splitext(image)
             sec = int((int(imageId.split('_')[1]) - 1) / 30)
             dets = info[imageId]
             if dets != []:
@@ -80,11 +79,12 @@ def detect(opt):
                         y1 = output[1]/ imgsz[0]
                         x2 = output[2]/ imgsz[1]
                         y2 = output[3]/ imgsz[0]
-                        dict = [video,sec,x1,y1,x2,y2,output[4]]
-                        dicts.append(dict)
-                with open('./Dataset/train_with_personID.csv',"w") as csvfile: 
-                    writer = csv.writer(csvfile)
-                    writer.writerows(dicts)
+                        data = [video,sec,x1,y1,x2,y2,output[4]]
+                        datas.append(data)
+                        
+    with open('./Dataset/train_with_personID.csv',"w") as csvfile: 
+        writer = csv.writer(csvfile)
+        writer.writerows(datas)
         
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

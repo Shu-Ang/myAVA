@@ -4,7 +4,7 @@ DATA_DIR="./Dataset/rawframes"
 
 videos=$(ls $IN_DATA_DIR)
 for video in $videos; do
-    video_name=$(echo $video | cut -d. -f1).$(echo $video | cut -d. -f2)
+    video_name=$(basename $video .mp4)
     video_path=$IN_DATA_DIR/$video
     frames_dir=${OUT_DATA_DIR}/$video_name
     rawframes_dir=${DATA_DIR}/$video_name

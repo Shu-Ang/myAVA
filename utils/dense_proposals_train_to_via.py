@@ -1,30 +1,25 @@
 from via3_tool import Via3Json
 import pickle
-import csv
 from collections import defaultdict
 import os
 import cv2
-import sys
 import re
+import json
 
 #传参 ./avaMin_dense_proposals_train.pkl
-avaMin_dense_proposals_path = "./yolovDeepsort/mywork/dense_proposals_train.pkl"
+avaMin_dense_proposals_path = "./Dataset/dense_proposals_train.pkl"
 
 #传参 ../videoData/choose_frames/
 root_path = "./Dataset/choose_frames/"
 
+action_list_path = "./Dataset/action_list.json"
 
 with open(avaMin_dense_proposals_path,'rb') as f:
     info = pickle.load(f, encoding='iso-8859-1') 
 
-
-attributes_dict = { '1':dict(aname='limbs', type=2, options={'0':'指指点点', '1':'攻击', '2':'操作他人设备'},default_option_id="", anchor_id = 'FILE1_Z0_XY1'),
-                   
-                    '2': dict(aname='body', type=2, options={'0':'不文明坐姿'}, default_option_id="", anchor_id='FILE1_Z0_XY1'),
-                   
-                    '3':dict(aname='facility', type=2, options={'0':'破坏电脑', '1':'砸鼠标键盘'},default_option_id="", anchor_id = 'FILE1_Z0_XY1'),
-                  }
-
+with open(action_list_path, 'r') as file:
+    attributes_dict = json.load(file)
+    
 videos = [entry for entry in os.listdir(root_path) if os.path.isdir(os.path.join(root_path, entry))]
 for video in videos:
     frame_path = os.path.join(root_path, video)
@@ -45,7 +40,7 @@ for video in videos:
         sp = img.shape #[高|宽|像素值由三种原色构成]
         img_H = sp[0]
         img_W = sp[1]
-        vid = image.split(".")[0] + "." + image.split(".")[1]
+        vid , _ = os.path.splitext(image)
         files_dict[str(image_id)] = dict(fname=image, type=2)
         
         result = info[vid]

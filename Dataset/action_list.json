@@ -1,0 +1,32 @@
+{
+    "1": {
+        "aname": "limbs",
+        "type": 2,
+        "options": {
+            "0": "指指点点",
+            "1": "攻击",
+            "2": "操作他人设备"
+        },
+        "default_option_id": "",
+        "anchor_id": "FILE1_Z0_XY1"
+    },
+    "2": {
+        "aname": "body",
+        "type": 2,
+        "options": {
+            "0": "不文明坐姿"
+        },
+        "default_option_id": "",
+        "anchor_id": "FILE1_Z0_XY1"
+    },
+    "3": {
+        "aname": "facility",
+        "type": 2,
+        "options": {
+            "0": "破坏电脑",
+            "1": "砸鼠标键盘"
+        },
+        "default_option_id": "",
+        "anchor_id": "FILE1_Z0_XY1"
+    }
+}

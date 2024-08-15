@@ -9,6 +9,7 @@ for video in $videos; do
     if [ ! -d "$OUT_DATA_DIR/$video" ]; then
         mkdir $OUT_DATA_DIR/$video
         video_path=$VIDEO_DIR/$video.mp4
+        
         duration=$(ffmpeg -i "$video_path" 2>&1 | grep -oP '(?<=Duration: )[^,]*')
         duration=$(echo $duration | awk -F: '{printf "%d:%d:%d", $1, $2, $3}')
         hours=$(echo $duration | cut -d: -f1 )

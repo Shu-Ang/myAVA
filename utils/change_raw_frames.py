@@ -1,5 +1,5 @@
 import os
-for root, dirs, files in os.walk("../../Dataset/rawframes", topdown=False):
+for root, dirs, files in os.walk("./Dataset/rawframes", topdown=False):
     for name in files:
         if 'checkpoint' in name:
             continue
@@ -12,7 +12,6 @@ for root, dirs, files in os.walk("../../Dataset/rawframes", topdown=False):
         tempName3 = str(int(tempName2)).zfill(5) # 000054 -> 00054
         newName = 'img_' + tempName3 + '.jpg'
         newNamePath = os.path.join(root, newName)
-        
         os.rename(oldNamePath,newNamePath)
         
     

@@ -9,6 +9,8 @@ Dataset
     + dense_proposals_train.pkl
     + dense_proposals_val.pkl
 - rawframes
+    + video_0
+        + frame_0
 # 2 环境准备
 ``` bash
 Pytorch 1.8.0，python 3.8，CUDA 11.1.1
@@ -16,7 +18,6 @@ Pytorch 1.8.0，python 3.8，CUDA 11.1.1
 conda install x264 ffmpeg -c conda-forge -y
 # 其余需要的库
 pip install -r ./yolovDeepsort/requirements.txt
-pip install opencv-python-headless==4.1.2.30
 # 下载预训练模型 （如果速度太慢可以在本地下载上传服务器到指定目录）
 wget https://github.com/ultralytics/yolov5/releases/download/v6.1/yolov5s.pt -O ./yolovDeepsort/yolov5/yolov5s.pt 
 mkdir -p ~/.config/Ultralytics/
@@ -29,11 +30,12 @@ wget https://drive.google.com/drive/folders/1xhG0kRH1EX5B9_Iz8gQJb7UNnn_riXi6 -O
 将视频上传至`./Dataset/videos`目录下，一次可以对多个视频进行处理
 ![image](https://img-blog.csdnimg.cn/1f996811ec164f08b21f04e42220601a.png)
 # 4 对视频进行裁剪、抽帧，并使用yolov5检测
-**以下命令都在ava目录下执行**
 ```
+git clone https://github.com/Shu-Ang/myAVA.git
+cd myAVA
 bash ./step1.sh
 ```
-之后将`./Dataset/choose_frames.zip`下载到本地并解压
+之后将`./Dataset/choose_frames.zip`下载到本地并解压，用于下一步标注操作
 # 5 使用via标注
 下载via工具https://www.robots.ox.ac.uk/~vgg/software/via/downloads/via3/via-3.0.13.zip
 
@@ -54,25 +56,22 @@ bash ./step1.sh
 ```
 bash step2.sh
 ```
-之后会在`./Dataset/annotations/`目录下得到`train.csv`和`train_without.csv`
+之后会在`./Dataset/annotations/`目录下生成`train.csv`、`val.csv`、`dense_proposals_train.pkl`、`dense_proposals_val.pkl`
 
-其中`train.csv`和`val.csv`结构如下：
-|video_name|sec|x1|y1|x2|y2|actionID|personID|
+其中`.csv`结构如下：
+|videoID|sec|x1|y1|x2|y2|actionID|personID|
 | ---------|---|--|--|--|--|--------|--------|   
 
-**注意，执行`clean1.sh`和`clean2.sh`可以将对应步骤的中间输出删除。开始标注之前务必执行这两个脚本以删除上次标注的中间输出。**
+**注意!开始下一次标注之前务必执行`clean1.sh`和`clean2.sh`以删除上次标注的中间输出。**
 
 # 7 mmaction2 install
 ```
 cd /home
 
-git clone https://gitee.com/YFwinston/mmaction2_YF.git
-
 pip install mmcv-full==1.3.17 -f https://download.openmmlab.com/mmcv/dist/cu111/torch1.8.0/index.html
-
-pip install opencv-python-headless==4.1.2.30
-
 pip install moviepy
+pip install opencv-contrib-python==4.10.0.84
+git clone https://gitee.com/YFwinston/mmaction2_YF.git
 
 cd mmaction2_YF
 pip install -r requirements/build.txt
@@ -99,7 +98,7 @@ cd /xxx/mmaction2_YF/configs/detection/ava/
 touch my_slowfast_kinetics_pretrained_r50_4x16x1_20e_ava_rgb.py
 ```
 内容如下：
-```
+```py
 # model setting
 model = dict(
     type='FastRCNN',
@@ -140,7 +139,7 @@ model = dict(
         bbox_head=dict(
             type='BBoxHeadAVA',
             in_channels=2304,
-            num_classes=81,
+            num_classes=7,  # 这里的类别数等于动作数 + 1（还有一个无动作）
             multilabel=True,
             dropout_ratio=0.5)),
     train_cfg=dict(
@@ -161,22 +160,16 @@ model = dict(
     test_cfg=dict(rcnn=dict(action_thr=0.002)))
 
 dataset_type = 'AVADataset'
+# 数据集路径
 data_root = '/home/zhangshuang/myAVA/Dataset/rawframes'
 anno_root = '/home/zhangshuang/myAVA/Dataset/annotations'
 
-
-#ann_file_train = f'{anno_root}/ava_train_v2.1.csv'
 ann_file_train = f'{anno_root}/train.csv'
-#ann_file_val = f'{anno_root}/ava_val_v2.1.csv'
 ann_file_val = f'{anno_root}/val.csv'
-
-#exclude_file_train = f'{anno_root}/ava_train_excluded_timestamps_v2.1.csv'
-#exclude_file_val = f'{anno_root}/ava_val_excluded_timestamps_v2.1.csv'
 
 exclude_file_train = f'{anno_root}/train_excluded_timestamps.csv'
 exclude_file_val = f'{anno_root}/val_excluded_timestamps.csv'
 
-#label_file = f'{anno_root}/ava_action_list_v2.1_for_activitynet_2018.pbtxt'
 label_file = f'{anno_root}/action_list.pbtxt'
 
 proposal_file_train = (f'{anno_root}/dense_proposals_train.pkl')
@@ -292,4 +285,3 @@ find_unused_parameters = False
 cd /xxx/mmaction2_YF
 python tools/train.py configs/detection/ava/my_slowfast_kinetics_pretrained_r50_4x16x1_20e_ava_rgb.py --validate
 ```
-# 9 一些error

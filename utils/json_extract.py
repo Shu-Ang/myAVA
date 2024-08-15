@@ -5,7 +5,7 @@ import cv2
 import pickle
 
 
-dense_proposals_path = "./yolovDeepsort/mywork/dense_proposals_train_deepsort.pkl"
+dense_proposals_path = "./Dataset/dense_proposals_train_deepsort.pkl"
 results_dict = {}
 # dict存放最后的json
 dicts = []
@@ -33,7 +33,7 @@ for video in videos:
                         fid = viaJson['file'][file]['fid']
                         fname = viaJson['file'][file]['fname']
                         files[fid]=fname
-                        prefix_name = fname.split('.')[0] + "." + fname.split('.')[1]
+                        prefix_name , _ = os.path.splitext(fname)
                         results_dict[prefix_name] = []
                         
                     for metadata in viaJson['metadata']:
@@ -44,7 +44,7 @@ for video in videos:
                         vid = imagen_x['vid']
                         fname = files[vid]
                         #获取视频帧ID
-                        imageId = fname.split('.')[0] + "." + fname.split('.')[1]
+                        imageId, _ = os.path.splitext(fname)
                         videoId = imageId.split('_')[0]
                         sec = int((int(imageId.split('_')[1]) - 1) / 30)
                         # 获取坐标对应的图片，因为最后的坐标值需要在0到1
@@ -80,10 +80,8 @@ for video in videos:
                         if y2 > 1:
                             y2 = 1
                             
-                        if len(xy) == 5 :
-                            results_dict[imageId].append([x1,y1,x2,y2,xy[4]])
-                        else:
-                            results_dict[imageId].append([x1,y1,x2,y2,float(0.99)])
+                        confidence = xy[4] if len(xy) == 5 else float(0.9)
+                        results_dict[imageId].append([x1,y1,x2,y2,confidence])
                             
                         for action in imagen_x['av']:
                             avs = imagen_x['av'][action]
@@ -93,7 +91,7 @@ for video in videos:
                                 avArr = avs.split(',')
                                 for av in avArr:                                                  
                                     actionId = attributeNums[int(action)-1]+int(av)+1
-                                    dict = [videoId,sec,x1,y1,x2,y2,actionId]
+                                    dict = [videoId,sec,x1,y1,x2,y2,confidence,actionId]
                                     dicts.append(dict)
                             
 with open('./Dataset/train_without_personID.csv',"w") as csvfile: 
