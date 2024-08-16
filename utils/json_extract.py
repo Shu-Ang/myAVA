@@ -45,8 +45,8 @@ for video in videos:
                         fname = files[vid]
                         #获取视频帧ID
                         imageId, _ = os.path.splitext(fname)
-                        videoId = imageId.split('_')[0]
-                        sec = int((int(imageId.split('_')[1]) - 1) / 30)
+                        videoId = imageId.rsplit('_', 1)[0]
+                        sec = int((int(imageId.rsplit('_', 1)[1]) - 1) / 30)
                         # 获取坐标对应的图片，因为最后的坐标值需要在0到1
                         # 就需要用现有坐标值/图片大小
                         imgPath = root + '/' + fname

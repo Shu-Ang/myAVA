@@ -20,11 +20,21 @@
         "anchor_id": "FILE1_Z0_XY1"
     },
     "3": {
-        "aname": "facility",
+        "aname": "equipment",
         "type": 2,
         "options": {
             "0": "破坏电脑",
             "1": "砸鼠标键盘"
+        },
+        "default_option_id": "",
+        "anchor_id": "FILE1_Z0_XY1"
+    },
+    "4": {
+        "aname": "normal",
+        "type": 2,
+        "options": {
+            "0": "站立",
+            "1": "坐"
         },
         "default_option_id": "",
         "anchor_id": "FILE1_Z0_XY1"

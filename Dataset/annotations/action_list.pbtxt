@@ -22,3 +22,11 @@ item {
   name: "砸鼠标键盘"
   id: 6
 }
+item {
+  name: "站立"
+  id: 7
+}
+item {
+  name: "坐"
+  id: 8
+}
