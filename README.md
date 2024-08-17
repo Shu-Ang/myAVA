@@ -50,7 +50,7 @@ bash ./step1.sh
 导入图片，打开标注文件（注意，打开x_x_proposal_s.json），最后结果：<br>
 ![image](https://img-blog.csdnimg.cn/ba44be0e5d454a2ba063e363b179daea.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAQ1Yt5p2o5biG,size_20,color_FFFFFF,t_70,g_se,x_16)
 
-标注完成后，导出json并命名为videoname_finish，之后上传到服务器对应目录下`./Dataset/choose_frames/videoname/`
+标注完成后，导出json并命名为videoname_finish.json，上传到服务器对应目录下`./Dataset/choose_frames/videoname/`（这个_finish.json文件一定要保留，如果出错可以接着标注）
 
 # 6 使用deepsort跟踪对象得到personID，并整合生成数据集
 ```

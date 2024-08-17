@@ -50,7 +50,7 @@ def detect(opt):
             image_path = os.path.join(video_path, image)
             tempImg = cv2.imread(image_path)
             imageId , _ = os.path.splitext(image)
-            sec = int((int(imageId.split('_')[1]) - 1) / 30)
+            sec = int((int(imageId.rsplit('_', 1)[1]) - 1) / 30)
             dets = info[imageId]
             if dets != []:
                 # 获取图片的大小
