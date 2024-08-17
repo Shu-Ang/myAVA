@@ -40,6 +40,9 @@ for video in videos:
                         imagen_x = viaJson['metadata'][metadata]
                         #获取人的坐标
                         xy = imagen_x['xy'][1:]
+                        # 忽略小框，防止手误
+                        if xy[3] < 10 or xy[4] < 10:
+                            continue
                         #获取vid，目的是让坐标信息与图片名称、视频名称对应
                         vid = imagen_x['vid']
                         fname = files[vid]
