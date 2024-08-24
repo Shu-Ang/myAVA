@@ -1,4 +1,4 @@
-IN_DATA_DIR="./Dataset/videos"
+IN_DATA_DIR=$1
 OUT_DATA_DIR="./Dataset/frames"
 DATA_DIR="./Dataset/rawframes"
 

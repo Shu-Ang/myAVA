@@ -1,9 +1,9 @@
 echo "start cutting frames......"
-bash ./utils/cut_frames.sh Dataset/videos
+bash ./utils/cut_frames.sh Dataset/test_videos
 
 
 echo "start choosing frames......"
-bash ./utils/choose_frames.sh Dataset/videos
+bash ./utils/choose_frames.sh Dataset/test_videos
 
 
 if [ -z "$(ls ./yolovDeepsort/yolov5/runs/detect/exp/labels)" ]; then

@@ -16,7 +16,7 @@ if [ ! -f "./Dataset/temp.csv" ]; then
 fi
 
 if [ -f "./Dataset/temp.csv" ]; then
-    python ./utils/generate_dense_proposals.py --train True
+    python ./utils/generate_dense_proposals.py --val True
 fi
 
 if [ ! -d "./Dataset/rawframes" ]; then
