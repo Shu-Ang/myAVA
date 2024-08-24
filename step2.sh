@@ -28,5 +28,5 @@ if [ ! -z "$(ls ./Dataset/frames/)" ]; then
 fi
 
 python ./utils/change_raw_frames.py
-
+pyton ./utils/cnt_actions.py
 
