@@ -22,7 +22,7 @@ for root, dirs, files in os.walk("./Dataset/choose_frames", topdown=False):
                     viaJson['metadata'][metadata]["av"] = av
                 #修改后的文件名
                 fileName , _ = os.path.splitext(file) 
-                newname = fileName + '_s'+'.json'
+                newname = fileName +'.json'
                 with open(root+'/'+newname, 'w') as f2:
                     f2.write(json.dumps(viaJson))
                     f2.close()

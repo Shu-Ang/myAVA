@@ -5,7 +5,7 @@ import cv2
 import pickle
 
 
-dense_proposals_path = "./Dataset/dense_proposals_train_deepsort.pkl"
+dense_proposals_path = "./Dataset/dense_proposals_deepsort.pkl"
 results_dict = {}
 # dict存放最后的json
 dicts = []
@@ -97,7 +97,7 @@ for video in videos:
                                     dict = [videoId,sec,x1,y1,x2,y2,confidence,actionId]
                                     dicts.append(dict)
                             
-with open('./Dataset/train_without_personID.csv',"w") as csvfile: 
+with open('./Dataset/data_without_personID.csv',"w") as csvfile: 
     writer = csv.writer(csvfile)
     writer.writerows(dicts)   
     

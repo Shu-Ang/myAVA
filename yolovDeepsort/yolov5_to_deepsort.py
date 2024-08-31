@@ -28,8 +28,7 @@ def detect(opt):
     cfg = get_config()
     cfg.merge_from_file(opt.config_deepsort)
     
-    # 这里是dense_proposals_train_deepsort.pkl的路径，
-    with open('./Dataset/dense_proposals_train_deepsort.pkl','rb') as f:
+    with open('./Dataset/dense_proposals_deepsort.pkl','rb') as f:
         info = pickle.load(f, encoding='iso-8859-1') 
     
     videos = [entry for entry in os.listdir(root_path) if os.path.isdir(os.path.join(root_path, entry))]
@@ -82,7 +81,7 @@ def detect(opt):
                         data = [video,sec,x1,y1,x2,y2,output[4]]
                         datas.append(data)
                         
-    with open('./Dataset/train_with_personID.csv',"w") as csvfile: 
+    with open('./Dataset/data_with_personID.csv',"w") as csvfile: 
         writer = csv.writer(csvfile)
         writer.writerows(datas)
         

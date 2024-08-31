@@ -7,26 +7,22 @@ item {
   id: 2
 }
 item {
-  name: "操作他人设备"
+  name: "不文明坐姿"
   id: 3
 }
 item {
-  name: "不文明坐姿"
+  name: "破坏电脑"
   id: 4
 }
 item {
-  name: "破坏电脑"
+  name: "砸鼠标键盘"
   id: 5
 }
 item {
-  name: "砸鼠标键盘"
+  name: "站立"
   id: 6
 }
 item {
-  name: "站立"
-  id: 7
-}
-item {
   name: "坐"
-  id: 8
+  id: 7
 }

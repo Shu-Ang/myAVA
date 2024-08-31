@@ -11,12 +11,17 @@ Dataset
 - rawframes
     + video_0
         + frame_0
+- frame_lists
+    + train.csv
+    + val.csv
 # 2 环境准备
 ``` bash
 Pytorch 1.8.0，python 3.8，CUDA 11.1.1
 # ffmpeg用于处理视频
 conda install x264 ffmpeg -c conda-forge -y
 # 其余需要的库
+git clone https://github.com/Shu-Ang/myAVA.git
+cd myAVA
 pip install -r ./yolovDeepsort/requirements.txt
 # 下载预训练模型 （如果速度太慢可以在本地下载上传服务器到指定目录）
 wget https://github.com/ultralytics/yolov5/releases/download/v6.1/yolov5s.pt -O ./yolovDeepsort/yolov5/yolov5s.pt 
@@ -27,13 +32,13 @@ wget https://drive.google.com/drive/folders/1xhG0kRH1EX5B9_Iz8gQJb7UNnn_riXi6 -O
 
 
 # 3 数据集视频准备
-将视频上传至`./Dataset/videos`目录下，一次可以对多个视频进行处理
-![image](https://img-blog.csdnimg.cn/1f996811ec164f08b21f04e42220601a.png)
+分别将**训练集**视频和**验证集**视频上传至`./Dataset/train_videos`和`./Dataset/val_videos`目录下，一次可以对多个视频进行处理
+
 # 4 对视频进行裁剪、抽帧，并使用yolov5检测
 ```
-git clone https://github.com/Shu-Ang/myAVA.git
-cd myAVA
-bash ./step1.sh
+bash ./step1.sh train
+或者
+bash ./step1.sh val
 ```
 之后将`./Dataset/choose_frames.zip`下载到本地并解压，用于下一步标注操作
 # 5 使用via标注
@@ -47,24 +52,56 @@ bash ./step1.sh
 
 ![image](https://img-blog.csdnimg.cn/6c896dd36f284f2286867510c705a7de.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAQ1Yt5p2o5biG,size_20,color_FFFFFF,t_70,g_se,x_16)
 
-导入图片，打开标注文件（注意，打开x_x_proposal_s.json），最后结果：<br>
+导入图片，打开标注文件（*_proposal.json），最后结果：<br>
 ![image](https://img-blog.csdnimg.cn/ba44be0e5d454a2ba063e363b179daea.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAQ1Yt5p2o5biG,size_20,color_FFFFFF,t_70,g_se,x_16)
 
-标注完成后，导出json并命名为videoname_finish.json，上传到服务器对应目录下`./Dataset/choose_frames/videoname/`（这个_finish.json文件一定要保留，如果出错可以接着标注）
+标注完成后，导出json并命名为videoname_finish.json，上传`./Dataset/train_finish/`或`./Dataset/val_finish`（这个_finish.json文件一定要保留，如果出错可以接着标注）
 
-# 6 使用deepsort跟踪对象得到personID，并整合生成数据集
+# 6 生成数据集
+## 6.1 生成annotaions
 ```
-bash step2.sh
+bash step2.sh train
+或
+bash step2.sh val
 ```
-之后会在`./Dataset/annotations/`目录下生成`train.csv`、`val.csv`、`dense_proposals_train.pkl`、`dense_proposals_val.pkl`
 
-其中`.csv`结构如下：
+之后会在`Dataset`目录下生成如下结构：
+- annotations
+    + train.csv
+    +  val.csv
+    + actionlist.pbtxt
+    + train_excluded_timestamps.csv
+    + val_excluded_timestamps.csv
+    + dense_proposals_train.pkl
+    + dense_proposals_val.pkl
+- rawframes
+    + video_0
+        + frame_0
+
+其中`train.csv`和`val.csv`结构如下：
 |videoID|sec|x1|y1|x2|y2|actionID|personID|
 | ---------|---|--|--|--|--|--------|--------|   
 
+## 6.2 数据集增广（可选）
+```py
+python ./utils/flip.py
+```
+该操作会将rawframes目录下所有frame和对应的标注框进行水平翻转
+## 6.3 生成frame_lists
+```py
+python ./utils/generate_framelists.py
+```
+该操作会在`Dataset`目录下生成
+- frame_lists
+    + train.csv
+    + val.csv
+
+
 **注意!开始下一次标注之前务必执行`clean1.sh`和`clean2.sh`以删除上次标注的中间输出。**
 
-# 7 mmaction2 install
+# 7 训练与测试
+## 7.1 mmaction2
+如果使用mmaction2框架进行训练，则需要用到`*_proposals_*.pkl`
 ```
 cd /home
 
@@ -91,8 +128,7 @@ wget https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50
 wget https://download.openmmlab.com/mmaction/recognition/slowfast/slowfast_r50_8x8x1_256e_kinetics400_rgb/slowfast_r50_8x8x1_256e_kinetics400_rgb_20200716-73547d2b.pth -P ./Checkpionts/mmaction/
 ```
 
-# 8 训练与测试
-## 8.1 配置文件
+### 7.1.1 配置文件
 ```
 cd /xxx/mmaction2_YF/configs/detection/ava/
 touch my_slowfast_kinetics_pretrained_r50_4x16x1_20e_ava_rgb.py
@@ -280,8 +316,133 @@ resume_from = None
 find_unused_parameters = False
 ```
 
-## 8.2 开始训练
+### 7.1.2 开始训练
 ```
 cd /xxx/mmaction2_YF
 python tools/train.py configs/detection/ava/my_slowfast_kinetics_pretrained_r50_4x16x1_20e_ava_rgb.py --validate
+```
+
+## 7.2 SlowFast
+如果使用SlowFast官方的框架进行训练，则不需要`*_proposals_*.pkl`，而需要`frame_lists`目录下的`train.csv`和`val.csv`
+
+### 7.2.1 install
+根据官方文档进行环境配置https://github.com/facebookresearch/SlowFast/blob/main/INSTALL.md
+跟着官方步骤会报错，解决方法参考https://blog.csdn.net/y459541195/article/details/126278476
+### 7.2.2 准备Dataset
+将前文得到的数据集整理成如下格式
+- ava
+    + frames
+        + video
+            - frame
+    + frame_lists
+        - train.csv
+        - val.csv
+    + annotations
+        - train.csv
+        - val.csv
+        - train_excluded_timestamps.csv
+        - train-excluded_timestamps.csv
+        - action_list.pbtxt
+
+此外，还需要一个`ava.json`文件存储动作类别，格式如下
+```json
+{
+    "point at": 1,
+    "attack": 2,
+    "uncivilized posture": 3,
+    "destroy": 4,
+    "smash": 5,
+    "stand": 6,
+    "sit": 7
+}
+```
+
+### 7.2.3 配置文件
+```yaml
+TRAIN:
+  ENABLE: True
+  DATASET: ava
+  BATCH_SIZE: 4
+  EVAL_PERIOD: 1
+  CHECKPOINT_PERIOD: 2
+  AUTO_RESUME: True
+  CHECKPOINT_FILE_PATH: #预训练模型
+  CHECKPOINT_TYPE: pytorch
+DATA:
+  NUM_FRAMES: 8 # 这里要和预训练模型对应
+  SAMPLING_RATE: 8 # 这里要和预训练模型对应
+  TRAIN_JITTER_SCALES: [256, 320]
+  TRAIN_CROP_SIZE: 224
+  TEST_CROP_SIZE: 256
+  INPUT_CHANNEL_NUM: [3, 3]
+  PATH_TO_DATA_DIR: # ava路径
+DETECTION:
+  ENABLE: True
+  ALIGNED: False
+AVA:
+  BGR: False
+  DETECTION_SCORE_THRESH: 0.8
+  FRAME_DIR: # frames路径
+  FRAME_LIST_DIR: # frame_lists路径
+  ANNOTATION_DIR: # annotations路径
+  TRAIN_GT_BOX_LISTS: ["train.csv"]
+  TRAIN_PREDICT_BOX_LISTS: []
+  TEST_PREDICT_BOX_LISTS: ["val.csv"]
+  EXCLUSION_FILE: train_excluded_timestamps.csv
+  LABEL_MAP_FILE: action_list.pbtxt
+  GROUNDTRUTH_FILE: val.csv
+SLOWFAST:
+  ALPHA: 4
+  BETA_INV: 8
+  FUSION_CONV_CHANNEL_RATIO: 2
+  FUSION_KERNEL_SZ: 7
+RESNET:
+  ZERO_INIT_FINAL_BN: True
+  WIDTH_PER_GROUP: 64
+  NUM_GROUPS: 1
+  DEPTH: 50
+  TRANS_FUNC: bottleneck_transform
+  STRIDE_1X1: False
+  NUM_BLOCK_TEMP_KERNEL: [[3, 3], [4, 4], [6, 6], [3, 3]]
+  SPATIAL_DILATIONS: [[1, 1], [1, 1], [1, 1], [2, 2]]
+  SPATIAL_STRIDES: [[1, 1], [2, 2], [2, 2], [1, 1]]
+NONLOCAL:
+  LOCATION: [[[], []], [[], []], [[], []], [[], []]]
+  GROUP: [[1, 1], [1, 1], [1, 1], [1, 1]]
+  INSTANTIATION: dot_product
+  POOL: [[[1, 2, 2], [1, 2, 2]], [[1, 2, 2], [1, 2, 2]], [[1, 2, 2], [1, 2, 2]], [[1, 2, 2], [1, 2, 2]]]
+BN:
+  USE_PRECISE_STATS: False
+  NUM_BATCHES_PRECISE: 200
+SOLVER:
+  BASE_LR: 0.4
+  MOMENTUM: 0.9
+  WEIGHT_DECAY: 1e-7
+  OPTIMIZING_METHOD: sgd
+  MAX_EPOCH: 100
+MODEL:
+  NUM_CLASSES: 8
+  ARCH: slowfast
+  MODEL_NAME: SlowFast
+  LOSS_FUNC: bce
+  DROPOUT_RATE: 0.5
+  HEAD_ACT: sigmoid
+TEST:
+  ENABLE: False
+  DATASET: ava
+  BATCH_SIZE: 8
+DATA_LOADER:
+  NUM_WORKERS: 2
+  PIN_MEMORY: True
+NUM_GPUS: 1
+NUM_SHARDS: 1
+RNG_SEED: 0
+OUTPUT_DIR: # 输出路径
+
+TENSORBOARD:
+  ENABLE: True
+  LOG_DIR: # tensorboard log路径
+  CLASS_NAMES_PATH: # ava.json
+
+
 ```

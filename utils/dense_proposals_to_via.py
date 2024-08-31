@@ -6,10 +6,9 @@ import cv2
 import re
 import json
 
-#传参 ./avaMin_dense_proposals_train.pkl
-avaMin_dense_proposals_path = "./Dataset/dense_proposals_train.pkl"
 
-#传参 ../videoData/choose_frames/
+avaMin_dense_proposals_path = "./Dataset/dense_proposals.pkl"
+
 root_path = "./Dataset/choose_frames/"
 
 action_list_path = "./Dataset/action_list.json"

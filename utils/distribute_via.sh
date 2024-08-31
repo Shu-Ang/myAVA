@@ -1,5 +1,7 @@
-FRAME_DIR='Dataset/choose_frames'
-VIA_DIR='Dataset/finish'
+split=$1
+
+FRAME_DIR=Dataset/choose_frames
+VIA_DIR=Dataset/${split}_finish
 
 files=$(ls $VIA_DIR)
 for file in $files; do

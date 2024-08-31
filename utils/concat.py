@@ -1,7 +1,7 @@
 import csv
 
-train_with_personID_path = './Dataset/train_with_personID.csv'
-train_without_personID_path = './Dataset/train_without_personID.csv'
+train_with_personID_path = './Dataset/data_with_personID.csv'
+train_without_personID_path = './Dataset/data_without_personID.csv'
 train_with_personID = []
 train_without_personID = []
 
@@ -28,6 +28,6 @@ for data in train_with_personID:
                 dict = [data[0],data[1],data[2],data[3],data[4],data[5],temp_data[6],temp_data[7],int(data[6])-1]
                 dicts.append(dict)
 
-with open('./Dataset/annotations/temp.csv',"a") as csvfile: 
+with open('./Dataset/temp.csv',"w") as csvfile: 
     writer = csv.writer(csvfile)
     writer.writerows(dicts)

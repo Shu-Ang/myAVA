@@ -1,51 +1,41 @@
-import pickle
-import numpy as np
-import csv
+import sys
 import os
-import argparse
+import json
+import pickle
 
-def parse_args():
-    parser = argparse.ArgumentParser(description='Train a recognizer')
-    parser.add_argument('--train', type = bool, help='train')
-    parser.add_argument('--val', type = bool, help='val')
-    args = parser.parse_args()
-    return args
+#传参 labelPath是yolov5检测结果的位置，需要获取0（0代表人）的四个坐标值，还需要检测概率
+# ../yolov5/runs/detect/exp/labels
+labelPath = "./yolovDeepsort/yolov5/runs/detect/exp/labels"
+#传参 保存为pkl的地址，这是像ava数据集对齐
+# ./avaMin_dense_proposals_train.pkl
+avaMin_dense_proposals_path = "./Dataset/dense_proposals.pkl"
 
-def main():    
-    args = parse_args()
-    if args.train:
-        split = 'train'
-    else:
-        split = 'val'
-        
-    dense_proposals_path = "./Dataset/annotations/dense_proposals_" + split + '.pkl'
-    data_path = './Dataset/temp.csv'
-    out_path = './Dataset/annotations/' + split + '.csv' 
-    dense_proposals = {}
-    data_dict = {}
-    data = []
+results_dict = {}
+for root, dirs, files in os.walk(labelPath):
+    if root == labelPath:
+        for file in files:    
+            #读取yolov5中的信息
+            key, _ = os.path.splitext(file)
+            with open(os.path.join(root, file)) as temp_txt:
+                temp_data_txt = temp_txt.readlines() 
+                results = []
+                for i in temp_data_txt:
+                    # 只要人的信息
+                    j = i.split(' ')
+                    if j[0]=='0':
+                
+                        # 由于yolov5的检测结果是 xywh
+                        # 要将xywh转化成xyxy
+                        y = j
+                        y[1] = float(j[1]) - float(j[3]) / 2  # top left x
+                        y[2] = float(j[2]) - float(j[4]) / 2  # top left y
+                        y[3] = float(j[1]) + float(j[3])  # bottom right x
+                        y[4] = float(j[2]) + float(j[4])  # bottom right y
+                        
+                        results.append([y[1],y[2],y[3],y[4],y[5]])
+            results_dict[key] = results
 
-    with open(data_path, "r") as train_data:
-        train_reader = csv.reader(train_data)
-        for row in train_reader:
-            # 处理每一行数据
-            key = f"{row[0]},{int(row[1]):04d}"
-            list = [row[2], row[3], row[4], row[5], row[6]]
-            data.append([row[0], row[1], row[2], row[3], row[4], row[5], row[7], row[8]])
-            if key not in data_dict:
-                data_dict[key] = []
-            data_dict[key].append(list)
-            
-    for key, value_list in data_dict.items():
-        dense_proposals[key] = np.array(value_list, dtype=np.float64)
-        
-
-    with open(dense_proposals_path,"ab") as pklfile: 
-        pickle.dump(dense_proposals, pklfile)
-
-    with open(out_path, 'a') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerows(data)
-        
-if __name__ == '__main__':
-    main()        
+# 保存为pkl文件
+with open(avaMin_dense_proposals_path,"wb") as pklfile: 
+    pickle.dump(results_dict, pklfile)
+    

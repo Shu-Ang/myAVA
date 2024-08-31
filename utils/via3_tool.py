@@ -209,7 +209,7 @@ class Via3Json(object):
         }
 
         with open(self.json_path, 'w') as json_file:
-            json.dump(json_infos, json_file)
+            json.dump(json_infos, json_file, ensure_ascii=False)
 
 
 if __name__ == '__main__':

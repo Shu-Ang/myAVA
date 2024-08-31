@@ -4,8 +4,7 @@
         "type": 2,
         "options": {
             "0": "指指点点",
-            "1": "攻击",
-            "2": "操作他人设备"
+            "1": "攻击"
         },
         "default_option_id": "",
         "anchor_id": "FILE1_Z0_XY1"
