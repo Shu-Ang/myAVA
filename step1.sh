@@ -34,7 +34,7 @@ bash ./utils/choose_frames.sh Dataset/${split}_videos
 
 if [ -z "$(ls ./yolovDeepsort/yolov5/runs/detect/exp/labels)" ]; then
     echo "start detecting with yolov5......"
-    python ./yolovDeepsort/yolov5/detect.py --source ./Dataset/choose_frames_all/ --save-txt --save-conf 
+    python ./yolovDeepsort/yolov5/detect.py --source ./Dataset/choose_frames_all/ --save-txt --save-conf --device 1
 fi
 
 if [ ! -f "./Dataset/dense_proposals.pkl" ]; then
