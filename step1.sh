@@ -1,5 +1,15 @@
 split=$1
 
+set -e
+
+cleanup() {
+    echo "error! start cleanning up"
+    bash clean1.sh
+    # 执行清理操作，例如关闭文件描述符、删除临时文件等
+}
+
+trap cleanup ERR
+
 if [ ! $split = 'train' ] && [ ! $split = 'val' ];then
     echo arg must be 'train' or 'val'
     exit 1
