@@ -35,10 +35,11 @@ wget https://drive.google.com/drive/folders/1xhG0kRH1EX5B9_Iz8gQJb7UNnn_riXi6 -O
 分别将**训练集**视频和**验证集**视频上传至`./Dataset/train_videos`和`./Dataset/val_videos`目录下，一次可以对多个视频进行处理
 
 # 4 对视频进行裁剪、抽帧，并使用yolov5检测
-```
-bash ./step1.sh train
+```sh
+bash ./step1.sh train $gpu
 或者
-bash ./step1.sh val
+bash ./step1.sh val $gpu
+# 其中$gpu为 0 1 2..
 ```
 之后将`./Dataset/choose_frames.zip`下载到本地并解压，用于下一步标注操作
 # 5 使用via标注
@@ -59,10 +60,11 @@ bash ./step1.sh val
 
 # 6 生成数据集
 ## 6.1 生成annotaions
-```
-bash step2.sh train
-或
-bash step2.sh val
+```sh
+bash ./step2.sh train $gpu
+或者
+bash ./step2.sh val $gpu
+# 其中$gpu为 0 1 2..
 ```
 
 之后会在`Dataset`目录下生成如下结构：

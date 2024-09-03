@@ -1,5 +1,5 @@
 split=$1
-
+gpu=$2
 set -e
 
 cleanup() {
@@ -20,7 +20,10 @@ if [ ! $split ];then
     exit 1
 fi
 
-if
+if [ ! $gpu ];then
+    gpu=0
+fi
+
 bash utils/distribute_via.sh $split
 
 if [ ! -f "./Dataset/data_without_personID.csv" ]; then
@@ -30,7 +33,7 @@ fi
 
 if [ ! -f "./Dataset/data_with_personID.csv" ]; then
     echo "start detecting with deepsort......"
-    python ./yolovDeepsort/yolov5_to_deepsort.py
+    python ./yolovDeepsort/yolov5_to_deepsort.py --gpu ${gpu}
 fi
 
 if [ ! -f "./Dataset/temp.csv" ]; then
@@ -55,4 +58,3 @@ if [ ! -z "$(ls ./Dataset/frames/)" ]; then
 fi
 
 python ./utils/change_raw_frames.py
-

@@ -84,10 +84,13 @@ def detect(opt):
     with open('./Dataset/data_with_personID.csv',"w") as csvfile: 
         writer = csv.writer(csvfile)
         writer.writerows(datas)
-        
+    
+    
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_deepsort", type=str, default="./yolovDeepsort/deep_sort_pytorch/configs/deep_sort.yaml")
+    parser.add_argument('--gpu', type = str, help='gpu', default='0')
     opt = parser.parse_args()
+    os.environ['CUDA_VISIBLE_DEVICES']= opt.gpu
     with torch.no_grad():
         detect(opt)
